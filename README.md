@@ -1,5 +1,13 @@
-KC-2 Pilot Project
+# KC-2 Pilot Project
 
-## Phase 1 Stage E migration
+## Phase 1 handover
 
-Reproducible Stage E import, failure logging, and validation live under `scripts/stage_e/`. See `docs/stage-e-reproducibility.md`. Sanitized source workbooks remain in the pinned Google Drive folder and are not committed to the repository.
+The authoritative Phase 1 operator/reviewer entry point is:
+
+- `docs/phase-1-handover.md` — final Phase 1 scope, source inventory, schema/migration overview, validated counts, known limitations, and acceptance checklist.
+- `docs/data-model.md` — approved Stage C data model.
+- `docs/stage-e-reproducibility.md` — detailed Stage E import, failure-log, rerun, and validation workflow.
+
+Stage E code lives under `scripts/stage_e/`. The sanitized source workbooks remain in the manifest-pinned Google Drive folder and are intentionally not committed to this repository.
+
+Before operating on data, read the Phase 1 handover and Stage E runbook. Do not treat routine validation as permission to reset/rebuild production, change the approved schema, resolve ambiguous source semantics, or begin Phase 2.
