@@ -1,0 +1,16 @@
+{
+  "drive_folder_url": "https://drive.google.com/drive/folders/1YrUTXKw2Gk1LQ37lz6Xg-N8BDE-P2fAD?usp=drive_link",
+  "workbooks": [
+    {"label":"UKG","drive_file_id":"1CQqolhsDTBaUEHkPiAqxoXF7l_-LiuzG9iRAqPfxU9w","filename":"Copy of [Stagging] UKG | Assessments.xlsx","kind":"assessment"},
+    {"label":"LKG","drive_file_id":"1Y3kidrZ1UMHVrELuWSVlQ9OIo7soWGvfZLi7ampfmz8","filename":"Copy of [Stagging] LKG | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 8","drive_file_id":"1BRqdqSxIarUsRFb1hhbA4hWb0sg2hrWixudhDV3ye_8","filename":"Copy of [Stagging] Class 8 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 7","drive_file_id":"1uY2PemswPC6bIi5fzO96f3pyVKgZxWRHjO6xmxyt2Cs","filename":"Copy of [Stagging] Class 7 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 6","drive_file_id":"1czn21NoBDY2ZXX8YWUH6uNnvWyxqVGa3j0QRwGIP8zk","filename":"Copy of [Stagging] Class 6 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 5","drive_file_id":"1N0ezdvBM1XCpFo7Bcsj6njMNyzLuh6PPYaBetn_S4Ss","filename":"Copy of [Stagging] Class 5 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 4","drive_file_id":"1FiDvz4gy_l69RKRUdH750P6bjG38qNaE_oqqf3-mZIw","filename":"Copy of [Stagging] Class 4 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 3","drive_file_id":"1vSVNC_0mn5TB4tKTLMjqpYQ8--q7MHwnm_FIYE0hOio","filename":"Copy of [Stagging] Class 3 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 2","drive_file_id":"1jFOgFclEXIUEX1Q0pnMI5W02nQvziON5NKk40outg5w","filename":"Copy of [Stagging] Class 2 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Class 1","drive_file_id":"1vWJ1yPUHZpGWPUZ9yaFt5QActX6cw-lKlrrnUjScNW8","filename":"Copy of [Stagging] Class 1 | Assessments.xlsx","kind":"assessment"},
+    {"label":"Students & Attendance","drive_file_id":"1PkcMiBgOITBRMnfVsj5PaYx7JO_adXBlFQeIOCH99b0","filename":"Copy of [Stagging] Students & Attendance | Vanavil.xlsx","kind":"students_attendance"}
+  ]
+}
