@@ -64,6 +64,6 @@ All Phase 1 tables are created in `public`, which is an exposed Supabase schema,
 
 Schema migration:
 
-- `supabase/migrations/20261001123000_create_phase1_schema.sql`
+- `supabase/migrations/20261001074553_create_phase1_schema.sql`
 
 Stage C is schema-only. Source-data migration is intentionally deferred.
