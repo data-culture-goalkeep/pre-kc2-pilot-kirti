@@ -19,7 +19,7 @@ This avoids committing large source files and keeps the repository free of sourc
 - `scripts/stage_e/test_stage_e_parser.py` — regression test for the accepted sanitized-source snapshot.
 - `requirements-stage-e.txt` — Python dependencies.
 
-The accepted Stage E failure artifact is retained externally in the same Drive folder as `KC2_Stage_E_Migration_Failure_Log.xlsx`.
+The accepted Stage E failure artifact is retained externally in the same Drive folder as `KC2_Stage_E_Migration_Failure_Log.xlsx`: https://docs.google.com/spreadsheets/d/1V3RY6DtG90uZeZI5FSJ2IRNjsFSp4dgl/edit?usp=drivesdk
 
 ## Environment
 
