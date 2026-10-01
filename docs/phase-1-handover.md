@@ -26,7 +26,7 @@ Expected local location is KC2_SOURCE_DIR, with filenames exactly as the manifes
 The manifest pins each of the 11 Drive file IDs, canonical Drive titles, expected exported XLSX filenames, and source types. It is the authoritative source-location contract. Source workbooks are intentionally not committed to Git.
 
 ## 3. Approved data model
-Detailed model: docs/data-model.md. The 17 tables are source_files, academic_years, grades, subjects, assessment_periods, assessment_score_codes, attendance_status_codes, students, student_grade_enrollments, grade_subjects, assessment_competencies, assessment_activities, student_assessments, assessment_scores, attendance_months, attendance_days, and student_measurements.
+Detailed model: docs/data-model.md. Mermaid views: docs/data-model-overview.md (overview) and docs/data-model-detailed.md (detailed schema). The 17 tables are source_files, academic_years, grades, subjects, assessment_periods, assessment_score_codes, attendance_status_codes, students, student_grade_enrollments, grade_subjects, assessment_competencies, assessment_activities, student_assessments, assessment_scores, attendance_months, attendance_days, and student_measurements.
 
 Students link to annual enrollments, assessments, and attendance months. Grade/subject pairs own competencies; competencies own activities; assessments own scores; attendance months own daily attendance and at most one measurement row. Foreign keys enforce these relationships.
 
@@ -111,6 +111,8 @@ The accepted live dataset was reconciled read-only. **No clean isolated Stage C-
 ## 10. Repository structure, environment, and run order
 - supabase/migrations/20261001074553_create_phase1_schema.sql - Stage C schema.
 - docs/data-model.md - model decisions.
+- docs/data-model-overview.md - simplified Mermaid ERD covering all 17 Phase 1 tables.
+- docs/data-model-detailed.md - detailed Mermaid ERD covering all 17 tables, columns, keys, and relationships.
 - docs/stage-e-reproducibility.md - detailed Stage E runbook.
 - docs/phase-1-handover.md - final handover/acceptance map.
 - scripts/stage_e/source_manifest.json - authoritative source inventory.
