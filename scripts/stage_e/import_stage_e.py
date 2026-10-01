@@ -32,7 +32,7 @@ def apply_data(conn,data):
     with conn.cursor(row_factory=dict_row) as cur:
         assert_schema(cur); source_ids={}
         for w in data.source_files:
-            source_ids[w["label"]]=upsert(cur,"source_files",{"drive_file_id":w["drive_file_id"],"file_name":w["filename"],"file_type":"google_sheet"},"drive_file_id","source_file_id")
+            source_ids[w["label"]]=upsert(cur,"source_files",{"drive_file_id":w["drive_file_id"],"file_name":w.get("source_file_name",Path(w["filename"]).stem),"file_type":"google_sheet"},"drive_file_id","source_file_id")
         def prov(r): return {"source_file_id":source_ids[r["source_label"]],"source_sheet_name":r["sheet"],"source_row_number":r["row"]}
 
         year_ids={}
