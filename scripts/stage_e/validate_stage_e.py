@@ -7,8 +7,17 @@ from stage_e_common import expected_counts, parse_sources
 
 CHECK_SQL={
 "provenance_missing":"""with bad as (
- select 'students' t,count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) c from public.students
+ select 'academic_years' t,count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) c from public.academic_years
+ union all select 'grades',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.grades
+ union all select 'subjects',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.subjects
+ union all select 'assessment_periods',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.assessment_periods
+ union all select 'assessment_score_codes',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.assessment_score_codes
+ union all select 'attendance_status_codes',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.attendance_status_codes
+ union all select 'students',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.students
  union all select 'student_grade_enrollments',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null or source_column_name is null) from public.student_grade_enrollments
+ union all select 'grade_subjects',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.grade_subjects
+ union all select 'assessment_competencies',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.assessment_competencies
+ union all select 'assessment_activities',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null or source_column_name is null) from public.assessment_activities
  union all select 'student_assessments',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.student_assessments
  union all select 'assessment_scores',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null or source_column_name is null) from public.assessment_scores
  union all select 'attendance_months',count(*) filter(where source_file_id is null or source_sheet_name is null or source_row_number is null) from public.attendance_months
@@ -39,6 +48,7 @@ CHECK_SQL={
  (select count(*) from (select student_id,academic_year_id,grade_subject_id,assessment_period_id from public.student_assessments group by 1,2,3,4 having count(*)>1)x)::int assessment_dup_groups,
  (select count(*) from (select student_id,academic_year_id,grade_id,month_number from public.attendance_months group by 1,2,3,4 having count(*)>1)x)::int attendance_dup_groups""",
 "duplicate_source_locations":"""select 'students' table_name,count(*)::int duplicate_source_keys from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.students group by 1,2,3 having count(*)>1)x
+ union all select 'student_grade_enrollments',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,source_column_name,count(*) from public.student_grade_enrollments group by 1,2,3,4 having count(*)>1)x
  union all select 'student_assessments',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.student_assessments group by 1,2,3 having count(*)>1)x
  union all select 'assessment_scores',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,source_column_name,count(*) from public.assessment_scores group by 1,2,3,4 having count(*)>1)x
  union all select 'attendance_months',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.attendance_months group by 1,2,3 having count(*)>1)x
@@ -62,10 +72,10 @@ def main():
     from psycopg.rows import dict_row
     out={"expected_counts":expected,"checks":{},"count_mismatches":{}}
     with psycopg.connect(db,row_factory=dict_row) as conn, conn.cursor() as cur:
-        cur.execute("select drive_file_id from public.source_files")
-        live_ids={r["drive_file_id"] for r in cur.fetchall()}
-        manifest_ids={w["drive_file_id"] for w in data.manifest["workbooks"]}
-        out["source_file_registry_match"]=live_ids==manifest_ids
+        cur.execute("select drive_file_id,file_name from public.source_files")
+        live_files={r["drive_file_id"]:r["file_name"] for r in cur.fetchall()}
+        manifest_files={w["drive_file_id"]:w.get("source_file_name",Path(w["filename"]).stem) for w in data.manifest["workbooks"]}
+        out["source_file_registry_match"]=live_files==manifest_files
         for table,n in expected.items():
             cur.execute(f"select count(*)::int n from public.{table}"); actual=cur.fetchone()["n"]
             if actual!=n: out["count_mismatches"][table]={"expected":n,"actual":actual}
@@ -85,7 +95,8 @@ def main():
     if d["attendance_dup_members"]!=totals["attendance_duplicate_members"] or d["attendance_dup_groups"]!=totals["attendance_duplicate_groups"]:
         failures.append("attendance duplicate_candidate mismatch")
     u=out["checks"]["unresolved_values"][0]
-    if u["score_a_unresolved"]!=1 or u["attendance_unresolved_codes"]!=3 or u["unexpected_null_grade_rows"]!=0:
+    expected_unresolved_grades=sum(data.summary["Students & Attendance"]["unresolved_grade_labels"].values())
+    if u["score_a_unresolved"]!=1 or u["attendance_unresolved_codes"]!=3 or u["unresolved_grade_rows"]!=expected_unresolved_grades or u["unexpected_null_grade_rows"]!=0:
         failures.append("unresolved-value contract mismatch")
     out["status"]="PASS" if not failures else "FAIL"; out["failures"]=failures
     print(json.dumps(out,indent=2,default=str)); raise SystemExit(0 if not failures else 1)
