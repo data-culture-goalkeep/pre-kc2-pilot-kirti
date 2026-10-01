@@ -5,7 +5,7 @@ Stage E loads the sanitized KC2 Phase 1 source workbooks into the schema created
 The migration source files are **not committed to GitHub**. They remain in the sanitized Google Drive source folder:
 
 - Folder: https://drive.google.com/drive/folders/1YrUTXKw2Gk1LQ37lz6Xg-N8BDE-P2fAD?usp=drive_link
-- Exact workbook file IDs and expected exported `.xlsx` filenames are pinned in `scripts/stage_e/source_manifest.json`.
+- Exact workbook file IDs, canonical Drive titles, and expected exported `.xlsx` filenames are pinned in `scripts/stage_e/source_manifest.json`.
 
 This avoids committing large source files and keeps the repository free of source-data copies. Export/download the eleven pinned sanitized workbooks to a local directory before running Stage E.
 
@@ -128,6 +128,6 @@ For the accepted sanitized snapshot the parser must produce: 11 source files, 18
 
 ## Testing status
 
-The parser/failure generator has been run against all eleven sanitized workbook exports and reproduces the accepted Stage E source counts, duplicate counts, placeholder count, invalid score set, and 9,346 failure entries. The existing completed live dataset has also been reconciled read-only against these expected counts and integrity checks.
+The parser/failure generator has been run against all eleven sanitized workbook exports and reproduces the accepted Stage E source counts, duplicate counts, invalid score set, and 9,346 failure entries; placeholder-header normalization separately resolves 44 approved `<activity_name>` definitions. The generated failure workbook was verified to contain a Summary sheet plus one sheet per source workbook and exactly 9,346 failure entries. The existing completed live dataset has also been reconciled read-only against these expected counts and integrity checks, including 3,453 assessments, 47,387 scores, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 100 assessment duplicate members, and 8 attendance duplicate members in 4 groups.
 
 A destructive clean-database rebuild has **not** been executed against the production Supabase project. This repository therefore demonstrates code-level reproducibility plus validated live reconciliation, not a fresh production reset/reload test.
