@@ -29,6 +29,8 @@ class StageESourceSnapshotTest(unittest.TestCase):
         self.assertEqual(totals["assessment_duplicate_members"], 100)
         self.assertEqual(totals["attendance_duplicate_groups"], 4)
         self.assertEqual(totals["attendance_duplicate_members"], 8)
+        self.assertEqual(sum(1 for row in data.assessments if row["duplicate_candidate"]), 100)
+        self.assertEqual(sum(1 for row in data.attendance_months if row["duplicate_candidate"]), 8)
         self.assertEqual(totals["invalid_score_values"], {"77.0": 1, "87.0": 1, "89.0": 1})
         self.assertEqual(totals["placeholder_activities"], 44)
 
