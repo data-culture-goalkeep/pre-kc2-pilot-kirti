@@ -2,6 +2,13 @@
 
 This document describes the Stage C schema implemented for the KC2 pilot. It is based on the approved Stage B source-grounded model. No source data is migrated by this stage.
 
+## Mermaid data model views
+
+- [Overview ERD](data-model-overview.md) — simplified relationship view covering all 17 approved Phase 1 tables.
+- [Detailed schema ERD](data-model-detailed.md) — all 17 approved tables with columns, keys, and migration-defined relationships.
+
+Both diagrams are generated strictly from `supabase/migrations/20261001074553_create_phase1_schema.sql`.
+
 ## Source tracking
 
 Every source-derived record is traceable to its source workbook, sheet, and row using:
