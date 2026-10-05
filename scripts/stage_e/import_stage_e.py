@@ -3,7 +3,7 @@
 from __future__ import annotations
 import argparse, json, os
 from pathlib import Path
-from stage_e_common import CANONICAL_GRADES, expected_counts, parse_sources, write_failure_log
+from stage_e_common import ATTENDANCE_MEANINGS, CANONICAL_GRADES, expected_counts, parse_sources, write_failure_log
 
 PERIOD_ORDER={"Baseline":0,"Term 1":1,"Term 2":2,"Term 3":3}
 
@@ -51,7 +51,7 @@ def apply_data(conn,data):
         for code,r in data.score_codes.items():
             upsert(cur,"assessment_score_codes",{"score_code":code,"meaning":None,**prov(r)},"score_code","score_code")
         for code,r in sorted(data.attendance_codes.items()):
-            upsert(cur,"attendance_status_codes",{"status_code":code,"meaning":None,**prov(r)},"status_code","status_code")
+            upsert(cur,"attendance_status_codes",{"status_code":code,"meaning":ATTENDANCE_MEANINGS.get(code),**prov(r)},"status_code","status_code")
 
         for s in data.students:
             upsert(cur,"students",{"student_id":s["student_id"],"student_name":s["student_name"],"source_enrollment_year_label":s["source_enrollment_year_label"],"gender":s["gender"],"date_of_birth":s["date_of_birth"],"social_category":s["social_category"],"program_type":s["program_type"],**prov(s)},"student_id","student_id")
