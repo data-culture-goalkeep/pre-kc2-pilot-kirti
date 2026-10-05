@@ -32,10 +32,10 @@ CHECK_SQL={
  (select count(*) from public.attendance_days ad left join public.attendance_months am on am.attendance_month_id=ad.attendance_month_id where am.attendance_month_id is null)::int orphan_days,
  (select count(*) from public.student_measurements sm left join public.attendance_months am on am.attendance_month_id=sm.attendance_month_id where am.attendance_month_id is null)::int orphan_measurements""",
 "assessment_validity":"""select
- count(*) filter(where numeric_score is not null and (numeric_score<0 or numeric_score>10))::int invalid_numeric,
+ count(*) filter(where numeric_score is not null and (numeric_score<1 or numeric_score>10))::int invalid_numeric,
  count(*) filter(where numeric_score is null and score_code is null)::int missing_representation,
- count(*) filter(where numeric_score is not null and score_code is not null)::int double_representation,
- count(*) filter(where raw_score_value in ('77','87','89','77.0','87.0','89.0'))::int invalid_raw_values_present
+ count(*) filter(where score_code is not null)::int invalid_score_code,
+ count(*) filter(where raw_score_value in ('A','0','0.0','77','87','89','77.0','87.0','89.0'))::int invalid_raw_values_present
  from public.assessment_scores""",
 "attendance_validity":"""select
  count(*) filter(where day_of_month<1 or day_of_month>31)::int invalid_day,
@@ -54,11 +54,15 @@ CHECK_SQL={
  union all select 'attendance_months',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.attendance_months group by 1,2,3 having count(*)>1)x
  union all select 'attendance_days',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,source_column_name,count(*) from public.attendance_days group by 1,2,3,4 having count(*)>1)x
  union all select 'student_measurements',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.student_measurements group by 1,2,3 having count(*)>1)x""",
-"unresolved_values":"""select
- (select count(*) from public.assessment_score_codes where score_code='A' and meaning is null)::int score_a_unresolved,
- (select count(*) from public.attendance_status_codes where status_code in ('H','N','NA') and meaning is null)::int attendance_unresolved_codes,
- (select count(*) from public.student_grade_enrollments where grade_id is null and source_grade_label in ('A. LKG','B. UKG'))::int unresolved_grade_rows,
- (select count(*) from public.student_grade_enrollments where grade_id is null and source_grade_label not in ('A. LKG','B. UKG'))::int unexpected_null_grade_rows"""
+"business_rules":"""select
+ (select count(*) from public.assessment_score_codes where score_code='A')::int score_a_codes,
+ (select count(*) from public.attendance_status_codes where status_code='P' and meaning='Present')::int present_meaning_ok,
+ (select count(*) from public.attendance_status_codes where status_code='A' and meaning='Absent')::int absent_meaning_ok,
+ (select count(*) from public.attendance_status_codes where status_code='H' and meaning='Holiday')::int holiday_meaning_ok,
+ (select count(*) from public.attendance_status_codes where status_code='NA' and meaning='Not Applicable')::int na_meaning_ok,
+ (select count(*) from public.attendance_status_codes where status_code='N' and meaning is null)::int n_still_unresolved,
+ (select count(*) from public.student_grade_enrollments where grade_id is null and source_grade_label in ('A. LKG','B. UKG'))::int unresolved_mapped_grade_rows,
+ (select count(*) from public.student_grade_enrollments where grade_id is null)::int all_null_grade_rows"""
 }
 
 def main():
@@ -94,10 +98,18 @@ def main():
         failures.append("assessment duplicate_candidate mismatch")
     if d["attendance_dup_members"]!=totals["attendance_duplicate_members"] or d["attendance_dup_groups"]!=totals["attendance_duplicate_groups"]:
         failures.append("attendance duplicate_candidate mismatch")
-    u=out["checks"]["unresolved_values"][0]
-    expected_unresolved_grades=sum(data.summary["Students & Attendance"]["unresolved_grade_labels"].values())
-    if u["score_a_unresolved"]!=1 or u["attendance_unresolved_codes"]!=3 or u["unresolved_grade_rows"]!=expected_unresolved_grades or u["unexpected_null_grade_rows"]!=0:
-        failures.append("unresolved-value contract mismatch")
+    b=out["checks"]["business_rules"][0]
+    if (
+        b["score_a_codes"]!=0
+        or b["present_meaning_ok"]!=1
+        or b["absent_meaning_ok"]!=1
+        or b["holiday_meaning_ok"]!=1
+        or b["na_meaning_ok"]!=1
+        or b["n_still_unresolved"]!=1
+        or b["unresolved_mapped_grade_rows"]!=0
+        or b["all_null_grade_rows"]!=0
+    ):
+        failures.append("PM-approved business-rule contract mismatch")
     out["status"]="PASS" if not failures else "FAIL"; out["failures"]=failures
     print(json.dumps(out,indent=2,default=str)); raise SystemExit(0 if not failures else 1)
 if __name__=="__main__": main()
