@@ -14,7 +14,8 @@ PERIODS={"Baseline","Term 1","Term 2","Term 3"}
 MONTHS={m:i for i,m in enumerate(["January","February","March","April","May","June","July","August","September","October","November","December"],1)}
 ATTN_GRADE={"LKG_Attn":"LKG","UKG_Attn":"UKG",**{f"Class{i}_Attn":f"Class {i}" for i in range(1,9)}}
 CANONICAL_GRADES=["LKG","UKG"]+[f"Class {i}" for i in range(1,9)]
-UNRESOLVED_GRADE_LABELS={"A. LKG","B. UKG"}
+GRADE_LABEL_MAP={"A. LKG":"LKG","B. UKG":"UKG"}
+ATTENDANCE_MEANINGS={"P":"Present","A":"Absent","H":"Holiday","NA":"Not Applicable"}
 FAILURE_SHEET_ORDER=["Students & Attendance","UKG","LKG","Class 8","Class 7","Class 6","Class 5","Class 4","Class 3","Class 2","Class 1"]
 
 def blank(v): return v is None or (isinstance(v,str) and v.strip()=="")
@@ -100,7 +101,7 @@ def parse_sources(source_dir:Path,manifest_path:Path)->StageEData:
             if not m:
                 data.failures["Students & Attendance"].append(["Students",r,get_column_letter(c),"enrollment","Cannot derive academic year from class column header",header]); enrollment_failures+=1; continue
             year=m.group(1); remember(data.academic_years,year,source_label="Students & Attendance",sheet="Students",row=1)
-            if label in UNRESOLVED_GRADE_LABELS: canonical=None; unresolved[label]+=1
+            if label in GRADE_LABEL_MAP: canonical=GRADE_LABEL_MAP[label]
             elif label in CANONICAL_GRADES: canonical=label
             else:
                 data.failures["Students & Attendance"].append(["Students",r,get_column_letter(c),"enrollment","Unrecognized source grade label",label]); enrollment_failures+=1; continue
@@ -204,14 +205,11 @@ def parse_sources(source_dir:Path,manifest_path:Path)->StageEData:
                     populated+=1; raw=sval(v)
                     if not act:
                         data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Score present under blank activity header",v]); invalid+=1; invalid_scores[raw]+=1; continue
-                    if raw=="A":
-                        num,code=None,"A"; data.score_codes.setdefault("A",{"source_label":"LKG","sheet":"Dropdown-Range","row":13})
-                    else:
-                        try: n=float(raw); ok=n.is_integer() and 0<=n<=10
-                        except (TypeError,ValueError): ok=False
-                        if not ok:
-                            data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Invalid assessment score; allowed integer 0-10 or A",raw]); invalid+=1; invalid_scores[raw]+=1; continue
-                        num,code=int(n),None
+                    try: n=float(raw); ok=n.is_integer() and 1<=n<=10
+                    except (TypeError,ValueError): ok=False
+                    if not ok:
+                        data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Invalid assessment score; allowed integer 1-10",raw]); invalid+=1; invalid_scores[raw]+=1; continue
+                    num,code=int(n),None
                     data.scores.append({"assessment_source_label":label,"assessment_sheet":ws.title,"assessment_row":r,"grade":grade,"subject":subject,"competency_order":co,"activity_order":ao,"raw_score_value":raw,"numeric_score":num,"score_code":code,"source_label":label,"sheet":ws.title,"row":r,"column":get_column_letter(c)})
         data.summary[label]={"assessment_source_rows":file_rows,"assessments_migratable":len(file_indices),"assessment_failed_rows":failed_rows,"populated_score_cells":populated,"scores_migratable":sum(1 for s in data.scores if s["source_label"]==label),"invalid_score_cells":invalid,"grade_subjects":gs,"competencies":comps,"activities":acts,"placeholder_activities":placeholders,"failure_entries":len(data.failures[label])}
 
