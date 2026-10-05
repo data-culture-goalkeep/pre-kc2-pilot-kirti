@@ -13,3 +13,19 @@ The authoritative Phase 1 operator/reviewer entry point is:
 Stage E code lives under `scripts/stage_e/`. The sanitized source workbooks remain in the manifest-pinned Google Drive folder and are intentionally not committed to this repository.
 
 Before operating on data, read the Phase 1 handover and Stage E runbook. Do not treat routine validation as permission to reset/rebuild production, change the approved schema, resolve ambiguous source semantics, or begin Phase 2.
+
+
+## PM correction branch
+
+The PM-approved Phase 1 corrections are implemented on the review branch `feature/pm-backend-frontend-integration`.
+
+Key corrections:
+- assessment scores: integer 1-10 only; `A`, `0`, `77`, `87`, `89`, and other invalid values become failure evidence;
+- grade labels: `A. LKG -> LKG`, `B. UKG -> UKG`;
+- attendance meanings: `P=Present`, `A=Absent`, `H=Holiday`, `NA=Not Applicable`; raw `N` remains unresolved;
+- placeholder activities and duplicate-candidate preservation remain unchanged.
+
+Forward database correction migration:
+`supabase/migrations/20261005150500_apply_pm_phase1_corrections.sql`
+
+Do not apply it to production until the sanitized-source regression/failure log has been rerun and the PR has been reviewed.
