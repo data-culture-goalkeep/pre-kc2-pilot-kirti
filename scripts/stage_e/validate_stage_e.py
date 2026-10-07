@@ -32,10 +32,10 @@ CHECK_SQL={
  (select count(*) from public.attendance_days ad left join public.attendance_months am on am.attendance_month_id=ad.attendance_month_id where am.attendance_month_id is null)::int orphan_days,
  (select count(*) from public.student_measurements sm left join public.attendance_months am on am.attendance_month_id=sm.attendance_month_id where am.attendance_month_id is null)::int orphan_measurements""",
 "assessment_validity":"""select
- count(*) filter(where numeric_score is not null and (numeric_score<1 or numeric_score>10))::int invalid_numeric,
+ count(*) filter(where numeric_score is not null and (numeric_score<0 or numeric_score>10))::int invalid_numeric,
  count(*) filter(where numeric_score is null and score_code is null)::int missing_representation,
- count(*) filter(where score_code is not null)::int invalid_score_code,
- count(*) filter(where raw_score_value in ('A','0','0.0','77','87','89','77.0','87.0','89.0'))::int invalid_raw_values_present
+ count(*) filter(where numeric_score is not null and score_code is not null)::int double_representation,\n count(*) filter(where score_code is not null and score_code<>'A')::int unknown_score_code,
+ count(*) filter(where raw_score_value in ('77','87','89','77.0','87.0','89.0'))::int invalid_raw_values_present
  from public.assessment_scores""",
 "attendance_validity":"""select
  count(*) filter(where day_of_month<1 or day_of_month>31)::int invalid_day,
@@ -55,7 +55,7 @@ CHECK_SQL={
  union all select 'attendance_days',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,source_column_name,count(*) from public.attendance_days group by 1,2,3,4 having count(*)>1)x
  union all select 'student_measurements',count(*)::int from (select source_file_id,source_sheet_name,source_row_number,count(*) from public.student_measurements group by 1,2,3 having count(*)>1)x""",
 "business_rules":"""select
- (select count(*) from public.assessment_score_codes where score_code='A')::int score_a_codes,
+ (select count(*) from public.assessment_score_codes where score_code='A' and meaning='Absent')::int score_a_meaning_ok,
  (select count(*) from public.attendance_status_codes where status_code='P' and meaning='Present')::int present_meaning_ok,
  (select count(*) from public.attendance_status_codes where status_code='A' and meaning='Absent')::int absent_meaning_ok,
  (select count(*) from public.attendance_status_codes where status_code='H' and meaning='Holiday')::int holiday_meaning_ok,
@@ -100,7 +100,7 @@ def main():
         failures.append("attendance duplicate_candidate mismatch")
     b=out["checks"]["business_rules"][0]
     if (
-        b["score_a_codes"]!=0
+        b["score_a_meaning_ok"]!=1
         or b["present_meaning_ok"]!=1
         or b["absent_meaning_ok"]!=1
         or b["holiday_meaning_ok"]!=1
