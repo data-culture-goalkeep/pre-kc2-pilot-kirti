@@ -19,13 +19,21 @@ Before operating on data, read the Phase 1 handover and Stage E runbook. Do not 
 
 The PM-approved Phase 1 corrections are implemented on the review branch `feature/pm-backend-frontend-integration`.
 
-Key corrections:
-- assessment scores: numeric 0-10 or code `A`; `A` means Absent and is preserved as a code; `77`, `87`, `89`, and unknown non-numeric values remain invalid;
-- grade labels: `A. LKG -> LKG`, `B. UKG -> UKG`;
+Key confirmed rules:
+- assessment storage: numeric `0-10` or score code `A`;
+- assessment `A` means **Absent**, remains stored as `A`, and contributes effective score `0` while remaining in the denominator for derived averages;
+- `77`, `87`, `89`, and unrecognized non-numeric assessment values remain invalid/failure evidence;
+- grade labels: `A. LKG -> LKG`, `B. UKG -> UKG`, preserving `source_grade_label`;
 - attendance meanings: `P=Present`, `A=Absent`, `H=Holiday`, `NA=Not Applicable`; raw `N` remains unresolved;
-- placeholder activities and duplicate-candidate preservation remain unchanged.
+- placeholder activities and duplicate-candidate preservation remain unchanged;
+- source-reported `student_assessments.reported_average_score` remains untouched.
 
 Forward database correction migration:
 `supabase/migrations/20261005150500_apply_pm_phase1_corrections.sql`
 
-Do not apply it to production until the sanitized-source regression/failure log has been rerun and the PR has been reviewed.
+The migration is non-destructive to assessment observations and must not be applied to production without explicit approval.
+
+### Phase 2 frontend follow-up
+
+The PM frontend lives on a separate branch and is outside PR #5. Its current assessment text/input still reflects the superseded `1-10 only` assumption. Phase 2 integration must update that UI to accept/display numeric `0-10` plus `A = Absent`, keeping actual zero distinct from absence while using `A -> 0` only in calculation logic.
+
