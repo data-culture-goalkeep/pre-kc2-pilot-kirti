@@ -16,6 +16,7 @@ ATTN_GRADE={"LKG_Attn":"LKG","UKG_Attn":"UKG",**{f"Class{i}_Attn":f"Class {i}" f
 CANONICAL_GRADES=["LKG","UKG"]+[f"Class {i}" for i in range(1,9)]
 GRADE_LABEL_MAP={"A. LKG":"LKG","B. UKG":"UKG"}
 ATTENDANCE_MEANINGS={"P":"Present","A":"Absent","H":"Holiday","NA":"Not Applicable"}
+ASSESSMENT_SCORE_MEANINGS={"A":"Absent"}
 FAILURE_SHEET_ORDER=["Students & Attendance","UKG","LKG","Class 8","Class 7","Class 6","Class 5","Class 4","Class 3","Class 2","Class 1"]
 
 def blank(v): return v is None or (isinstance(v,str) and v.strip()=="")
@@ -38,6 +39,34 @@ def as_date(v):
 def rows_values(ws): return list(ws.iter_rows(values_only=True))
 def load_manifest(path): return json.loads(Path(path).read_text(encoding="utf-8"))
 def remember(d,key,**prov): d.setdefault(key,prov)
+
+def parse_assessment_score(raw):
+    value=sval(raw)
+    if value=="A":
+        return None,"A"
+    try:
+        n=float(value)
+    except (TypeError,ValueError):
+        return None
+    if not n.is_integer() or not 0<=n<=10:
+        return None
+    return int(n),None
+
+def assessment_effective_score(numeric_score,score_code):
+    if numeric_score is not None and score_code is None:
+        if 0<=numeric_score<=10:
+            return numeric_score
+        raise ValueError("numeric assessment score must be between 0 and 10")
+    if numeric_score is None and score_code=="A":
+        return 0
+    raise ValueError("unsupported or ambiguous assessment score representation")
+
+def calculate_assessment_average(score_rows):
+    rows=list(score_rows)
+    if not rows:
+        raise ValueError("assessment average is undefined without score observations")
+    effective=[assessment_effective_score(r.get("numeric_score"),r.get("score_code")) for r in rows]
+    return sum(effective)/len(effective)
 
 @dataclass
 class StageEData:
@@ -205,11 +234,12 @@ def parse_sources(source_dir:Path,manifest_path:Path)->StageEData:
                     populated+=1; raw=sval(v)
                     if not act:
                         data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Score present under blank activity header",v]); invalid+=1; invalid_scores[raw]+=1; continue
-                    try: n=float(raw); ok=n.is_integer() and 1<=n<=10
-                    except (TypeError,ValueError): ok=False
-                    if not ok:
-                        data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Invalid assessment score; allowed integer 1-10",raw]); invalid+=1; invalid_scores[raw]+=1; continue
-                    num,code=int(n),None
+                    parsed=parse_assessment_score(raw)
+                    if parsed is None:
+                        data.failures[label].append([ws.title,r,get_column_letter(c),"assessment_score","Invalid assessment score; allowed integer 0-10 or A",raw]); invalid+=1; invalid_scores[raw]+=1; continue
+                    num,code=parsed
+                    if code=="A":
+                        data.score_codes.setdefault("A",{"source_label":"LKG","sheet":"Dropdown-Range","row":13})
                     data.scores.append({"assessment_source_label":label,"assessment_sheet":ws.title,"assessment_row":r,"grade":grade,"subject":subject,"competency_order":co,"activity_order":ao,"raw_score_value":raw,"numeric_score":num,"score_code":code,"source_label":label,"sheet":ws.title,"row":r,"column":get_column_letter(c)})
         data.summary[label]={"assessment_source_rows":file_rows,"assessments_migratable":len(file_indices),"assessment_failed_rows":failed_rows,"populated_score_cells":populated,"scores_migratable":sum(1 for s in data.scores if s["source_label"]==label),"invalid_score_cells":invalid,"grade_subjects":gs,"competencies":comps,"activities":acts,"placeholder_activities":placeholders,"failure_entries":len(data.failures[label])}
 
