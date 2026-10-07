@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanavil Learning Support</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f9;color:#242126}.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}.side{background:#5b2b82;color:white;padding:26px 18px;display:flex;flex-direction:column;gap:10px}.side h2{margin:0;font-size:26px}.side p{margin:0 0 20px;opacity:.8}.side small{margin-top:auto;opacity:.75}.nav{border:0;background:transparent;color:white;padding:12px 14px;text-align:left;border-radius:9px;cursor:pointer}.nav.active,.nav:hover{background:#ffffff24}main{min-width:0}header{min-height:72px;background:white;border-bottom:1px solid #e4e0e7;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}.page{display:none;padding:32px}.page.active{display:block}h1{font-size:34px;margin:4px 0 24px}.eyebrow{color:#777;font-size:13px}.grid{display:grid;gap:14px;margin:18px 0}.four{grid-template-columns:repeat(4,1fr)}.five{grid-template-columns:repeat(5,1fr)}.two{grid-template-columns:1.3fr .7fr}.card{background:white;border:1px solid #e4e0e7;border-radius:14px;padding:20px;margin-bottom:16px}.card span{color:#666}.card b{font-size:30px;display:block;margin:8px 0}.card small{color:#777}.notice{background:#fff8e8;border:1px solid #e6c66e;padding:14px 16px;border-radius:10px;margin:18px 0}.yellow{background:#fff5cf}.row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.row em{font-style:normal;background:#f3eaf8;color:#5b2b82;border-radius:99px;padding:4px 8px;font-size:12px}.toolbar{display:flex;gap:12px;margin-bottom:16px}.toolbar input{flex:1}.primary{background:#5b2b82;color:white;border:1px solid #5b2b82;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.primary:disabled{opacity:.5;cursor:not-allowed}.secondary{background:white;color:#5b2b82;border:1px solid #bba0ce;border-radius:8px;padding:9px 12px;cursor:pointer}input,select{border:1px solid #ddd;border-radius:8px;padding:10px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}.attendance{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:16px 0}.daychip{border:1px solid #e4e0e7;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:4px}.daychip b{font-size:14px;margin:0}.daychip span{font-weight:700;color:#5b2b82}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}.formgrid label{display:flex;flex-direction:column;gap:6px;font-size:13px}.authbox{max-width:520px}.authbox form{display:grid;gap:12px}.authbox label{display:grid;gap:6px}.state{padding:24px;border:1px dashed #c9c1ce;border-radius:12px;background:white;margin-bottom:16px}.errorText{color:#a12525}.muted{color:#777}.session{display:flex;align-items:center;gap:10px;font-size:12px;color:#666}.linkbutton{border:0;background:none;color:#5b2b82;padding:0;font:inherit;font-weight:700;cursor:pointer;text-align:left}.linkbutton+small{display:block;margin-top:3px}.readonly-note{font-size:12px;color:#777}@media(max-width:1000px){.shell{grid-template-columns:190px 1fr}.four,.five{grid-template-columns:1fr 1fr}.attendance{grid-template-columns:repeat(4,1fr)}}@media(max-width:700px){.shell{grid-template-columns:1fr}.side{position:relative}.four,.five,.two,.formgrid,.attendance{grid-template-columns:1fr}header{height:auto;align-items:flex-start;flex-direction:column}.page{padding:20px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <h2>Vanavil</h2><p>Learning Support</p>
+    <button class="nav active" data-page="work">My Work</button>
+    <button class="nav" data-page="students">Students & Attendance</button>
+    <button class="nav" data-page="assessments">Assessments & Follow-up</button>
+    <button class="nav" data-page="insights">Programme Insights</button>
+    <small>Phase 2 • Students & Attendance read-only</small>
+  </aside>
+  <main>
+    <header>
+      <select><option>2025-26</option></select>
+      <div class="session"><span id="sessionLabel">Not signed in</span><button class="secondary" id="signOutButton" hidden>Sign out</button><button class="primary" id="attendanceJump">Students & attendance</button></div>
+    </header>
+    <section id="work" class="page active">
+      <p class="eyebrow">Monday, 22 September</p><h1>Start with students who need attention.</h1>
+      <div class="grid four"><div class="card"><span>Students enrolled</span><b>148</b><small>+11 from 2024-25</small></div><div class="card"><span>Need follow-up</span><b>9</b><small>4 new this month</small></div><div class="card"><span>Attendance this month</span><b>87%</b><small>-3 pts from August</small></div><div class="card"><span>Assessment coverage</span><b>82%</b><small>Term 2 • 121 of 148</small></div></div>
+      <div class="notice">Confirm before build: risk thresholds are illustrative and need final approval.</div>
+      <div class="grid two"><div class="card"><h3>Follow-up queue</h3><div class="row"><span>Student A • Attendance decline</span><em>Review</em></div><div class="row"><span>Student B • Low learning score</span><em>High</em></div><div class="row"><span>Student C • Combined support flag</span><em>Review</em></div></div><div class="card"><h3>What needs completing</h3><div class="row"><span>Grade VI attendance</span><small>12 pending</small></div><div class="row"><span>Term 2 English assessment</span><small>27 pending</small></div><div class="row"><span>Follow-up outcomes</span><small>3 overdue</small></div></div></div>
+    </section>
+    <section id="students" class="page" data-state="auth">
+      <h1>One child, one connected history.</h1>
+      <div id="authPanel" class="card authbox"><h3>Internal sign in required</h3><p>Student-level records are available only to authenticated internal users.</p><form id="signInForm"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">Sign in</button><div id="authMessage" class="muted" role="status"></div></form></div>
+      <div data-student-state="auth" class="state">Sign in to load Students & Attendance.</div><div data-student-state="loading" class="state" hidden>Loading live student and attendance data…</div><div data-student-state="empty" class="state" hidden>No matching student records were found.</div><div data-student-state="error" class="state errorText" hidden>Could not load student data.</div>
+      <div id="studentContent" hidden><div class="toolbar"><input id="studentSearch" placeholder="Search student name, ID, or grade"><button class="primary" disabled title="Phase 2 milestone is read-only">Read only</button></div><div data-student-state="ready" class="card" hidden><table><thead><tr><th>Student</th><th>Grade</th><th>Academic year</th><th>Latest attendance month</th><th>Attendance</th></tr></thead><tbody id="studentBody"></tbody></table></div><div id="attendanceDetail" class="card" hidden><h3 id="attendanceTitle">Attendance detail</h3><div id="attendanceGrid" class="attendance"></div><div class="readonly-note">Daily attendance is read-only in this Phase 2 milestone. Raw <b>N</b> remains unresolved.</div></div></div>
+    </section>
+    <section id="assessments" class="page">
+      <h1>See the learning picture, then record the detail.</h1><div class="notice yellow"><b>Valid scores:</b> 0–10 or <b>A</b> (Absent). A remains displayed/stored as A, contributes 0 for calculations, and stays in the denominator. 77/87/89 are invalid; N remains unresolved.</div>
+      <div class="grid five"><div class="card"><span>Understanding</span><b>7.8</b><small>Normal</small></div><div class="card"><span>Reading</span><b>6.9</b><small>Normal</small></div><div class="card"><span>Expression</span><b>5.6</b><small>Normal</small></div><div class="card"><span>Writing</span><b>3.0</b><small>Struggling</small></div><div class="card"><span>Critical / Creative</span><b>8.1</b><small>Thriving</small></div></div>
+      <div class="card"><h3>Record Term 2 results • Student A • Tamil</h3><div class="formgrid"><label>Understanding — Activity 1<input data-score-input inputmode="numeric" value="8"></label><label>Understanding — Activity 2<input data-score-input inputmode="numeric" value="7"></label><label>Reading — Activity 1<input data-score-input inputmode="numeric" value="7"></label><label>Writing — Activity 1<input data-score-input inputmode="numeric" value="3"></label></div><button class="primary" disabled title="Assessment writes are not part of this milestone">Save results</button></div>
+    </section>
+    <section id="insights" class="page">
+      <h1>Answer the agreed programme questions.</h1><div class="grid four"><div class="card"><span>Students reached</span><b>148</b></div><div class="card"><span>Female</span><b>49%</b></div><div class="card"><span>SC / ST</span><b>94%</b></div><div class="card"><span>Improved since Term 1</span><b>61%</b></div></div><div class="card"><h3>Agreed Key Questions</h3><ol><li>Who are we reaching? — 148 / 148 covered</li><li>Are students attending? — 142 / 148 linked</li><li>How is attendance changing? — 12 need review</li><li>What is learning distribution? — 121 comparable</li><li>Who needs combined support? — 9 flagged</li><li>What support is happening? — 9 open</li><li>Which groups are progressing? — 121 comparable</li><li>Is BMI associated with learning? — 104 linkable records</li></ol></div><div class="notice">BMI analysis remains provisional until an authoritative Indian child/adolescent reference is confirmed.</div>
+    </section>
+  </main>
+</div>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>
