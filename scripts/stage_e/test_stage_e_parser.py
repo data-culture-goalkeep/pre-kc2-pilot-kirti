@@ -44,7 +44,7 @@ class StageESourceSnapshotTest(unittest.TestCase):
         absent_scores = [s for s in data.scores if s["numeric_score"] is None and s["score_code"] == "A"]
         self.assertEqual(len(zero_scores), 1051)
         self.assertEqual(len(absent_scores), 52)
-        self.assertTrue(all(s["raw_score_value"] == "0" for s in zero_scores))
+        self.assertTrue(all(s["numeric_score"] == 0 and s["score_code"] is None for s in zero_scores))
         self.assertTrue(all(s["raw_score_value"] == "A" for s in absent_scores))
         self.assertTrue(all(all(k in s for k in ("source_label", "sheet", "row", "column")) for s in zero_scores + absent_scores))
         self.assertIn("A", data.score_codes)
