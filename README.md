@@ -20,7 +20,7 @@ Before operating on data, read the Phase 1 handover and Stage E runbook. Do not 
 The PM-approved Phase 1 corrections are implemented on the review branch `feature/pm-backend-frontend-integration`.
 
 Key corrections:
-- assessment scores: integer 1-10 only; `A`, `0`, `77`, `87`, `89`, and other invalid values become failure evidence;
+- assessment scores: numeric 0-10 or code `A`; `A` means Absent and is preserved as a code; `77`, `87`, `89`, and unknown non-numeric values remain invalid;
 - grade labels: `A. LKG -> LKG`, `B. UKG -> UKG`;
 - attendance meanings: `P=Present`, `A=Absent`, `H=Holiday`, `NA=Not Applicable`; raw `N` remains unresolved;
 - placeholder activities and duplicate-candidate preservation remain unchanged.
