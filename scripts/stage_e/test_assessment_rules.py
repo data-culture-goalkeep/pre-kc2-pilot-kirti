@@ -31,6 +31,18 @@ class AssessmentRuleTest(unittest.TestCase):
     def test_unknown_non_numeric_value_is_rejected(self):
         self.assertIsNone(parse_assessment_score("UNKNOWN"))
 
+    def test_effective_numeric_five(self):
+        self.assertEqual(assessment_effective_score(5, None), 5)
+
+    def test_effective_numeric_zero(self):
+        self.assertEqual(assessment_effective_score(0, None), 0)
+
+    def test_effective_absent_is_zero(self):
+        self.assertEqual(assessment_effective_score(None, "A"), 0)
+
+    def test_effective_numeric_ten_boundary(self):
+        self.assertEqual(assessment_effective_score(10, None), 10)
+
     def test_mixed_average_includes_absent_as_zero(self):
         rows = [
             {"numeric_score": 8, "score_code": None},
