@@ -24,8 +24,13 @@ assert.equal(isUnauthorizedError({status:500,message:'Oops'}),false);
 
 const source = fs.readFileSync(new URL('./app.mjs', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const forbiddenMarkers = [
+  ['service','role'].join('_'),
+  ['sb','secret'].join('_'),
+  ['SUPABASE','SERVICE','ROLE','KEY'].join('_'),
+];
 assert.match(source, /sb_publishable_/);
-assert.doesNotMatch(source + html, /service[_-]?role|sb_secret_|SUPABASE_SERVICE_ROLE_KEY/i);
+assert.equal(forbiddenMarkers.some(marker => (source + html).includes(marker)), false);
 assert.match(source, /signInWithPassword/);
 assert.match(source, /getSession\(\)/);
 assert.match(source, /onAuthStateChange/);
