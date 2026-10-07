@@ -34,7 +34,8 @@ CHECK_SQL={
 "assessment_validity":"""select
  count(*) filter(where numeric_score is not null and (numeric_score<0 or numeric_score>10))::int invalid_numeric,
  count(*) filter(where numeric_score is null and score_code is null)::int missing_representation,
- count(*) filter(where numeric_score is not null and score_code is not null)::int double_representation,\n count(*) filter(where score_code is not null and score_code<>'A')::int unknown_score_code,
+ count(*) filter(where numeric_score is not null and score_code is not null)::int double_representation,
+ count(*) filter(where score_code is not null and score_code<>'A')::int unknown_score_code,
  count(*) filter(where raw_score_value in ('77','87','89','77.0','87.0','89.0'))::int invalid_raw_values_present
  from public.assessment_scores""",
 "attendance_validity":"""select
