@@ -88,8 +88,11 @@ Therefore the four accepted attendance duplicate groups/eight records are produc
 
 Only approved/mechanically safe transformations are performed:
 
-- integer assessment scores `1-10` → `numeric_score`;
-- assessment `A`, `0`, `77`, `87`, `89`, and any other non-integer/out-of-range score are logged and not inserted as valid scores;
+- integer assessment scores `0-10` → `numeric_score`;
+- assessment `A` → `score_code='A'`, with semantic meaning **Absent**;
+- `A` is preserved as a source code; derived calculation logic uses effective value `0` and keeps it in the denominator;
+- invalid scores including `77`, `87`, `89`, and unrecognized non-numeric values are logged and not inserted as valid scores;
+- source-reported `student_assessments.reported_average_score` is preserved unchanged;
 - attendance retains the exact value in `raw_status_code` and trims surrounding whitespace only for `normalized_status_code`;
 - attendance meanings are `P = Present`, `A = Absent`, `H = Holiday`, and `NA = Not Applicable`;
 - raw attendance code `N` remains semantically unresolved pending an explicit normalization decision;
@@ -111,11 +114,11 @@ It validates:
 - manifest source-file IDs and source-to-database table counts;
 - provenance completeness;
 - orphan enrollments/assessments/scores/attendance/days/measurements;
-- assessment score representation under the integer `1-10` rule and exclusion of invalid score/code rows;
+- assessment score representation under the `0-10` or `A` rule, `A = Absent`, and exclusion of invalid/unknown score values;
 - attendance day range, raw-code presence, trim-only normalization, and approved code meanings;
 - duplicate source-location detection;
 - assessment/attendance duplicate group and member counts;
-- removal of assessment code `A`, mapping of `A. LKG` / `B. UKG`, and preservation of raw `N` as unresolved.
+- assessment code `A` retained with meaning `Absent`, mapping of `A. LKG` / `B. UKG`, and preservation of raw `N` as unresolved.
 
 ## Regression test
 
@@ -124,10 +127,10 @@ KC2_SOURCE_DIR="$KC2_SOURCE_DIR" PYTHONPATH=scripts/stage_e \
   python -m unittest scripts/stage_e/test_stage_e_parser.py
 ```
 
-The previous handover snapshot contained 47,387 valid assessment scores and 9,346 failure entries under the old `0-10/A` rule. Those two counts are no longer acceptance constants because `A` and `0` are now invalid. Before the correction migration is applied or the branch is merged as an accepted backend baseline, rerun the parser against all 11 sanitized workbooks and record the corrected valid-score and failure-entry counts. Stable expectations remain: 11 source files, 188 students, 317 enrollments, 3,453 assessment instances, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 50/100 assessment duplicate groups/members, 4/8 attendance duplicate groups/members, and 44 placeholder activities.
+The accepted sanitized snapshot remains: 11 source files, 188 students, 317 enrollments, 3,453 assessment instances, **47,387 valid assessment scores**, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 50/100 assessment duplicate groups/members, 4/8 attendance duplicate groups/members, 44 placeholder activities, and **9,346 failure entries**. The confirmed score storage domain remains `0-10/A`; the correction package adds `A = Absent`, calculation semantics, attendance meanings, and LKG/UKG normalization without deleting valid score observations.
 
 ## Testing status
 
-The original Phase 1 snapshot was previously validated against all eleven sanitized workbook exports. The PM-approved corrections in this branch change the valid-score domain and therefore require a new source regression/failure-log regeneration before acceptance. The existing production dataset has not been modified by this branch. Run the regression and dry-run first, capture the corrected counts, then apply the forward correction migration only to an explicitly approved target and rerun read-only validation.
+The accepted Phase 1 snapshot was previously validated against all eleven sanitized workbook exports under the same `0-10/A` storage domain now confirmed by the PM. Focused unit tests in this branch cover score parsing, `A = Absent`, calculation behavior (`A → 0` while remaining in the denominator), attendance meanings, and invalid-value rejection. The full workbook-backed regression still requires `KC2_SOURCE_DIR`; rerun it before any approved database apply when the eleven local workbook exports are available. The existing production dataset has not been modified by this branch.
 
 A destructive clean-database rebuild has **not** been executed against the production Supabase project. This repository therefore demonstrates code-level reproducibility plus validated live reconciliation, not a fresh production reset/reload test.
