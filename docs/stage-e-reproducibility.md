@@ -88,13 +88,16 @@ Therefore the four accepted attendance duplicate groups/eight records are produc
 
 Only approved/mechanically safe transformations are performed:
 
-- numeric assessment scores 0–10 → `numeric_score`;
-- literal assessment `A` → `score_code='A'`, with `meaning=NULL`;
-- invalid scores including `77`, `87`, `89` are logged and not inserted as valid scores;
+- integer assessment scores `0-10` → `numeric_score`;
+- assessment `A` → `score_code='A'`, with semantic meaning **Absent**;
+- `A` is preserved as a source code; derived calculation logic uses effective value `0` and keeps it in the denominator;
+- invalid scores including `77`, `87`, `89`, and unrecognized non-numeric values are logged and not inserted as valid scores;
+- source-reported `student_assessments.reported_average_score` is preserved unchanged;
 - attendance retains the exact value in `raw_status_code` and trims surrounding whitespace only for `normalized_status_code`;
-- `H`, `N`, `NA` remain semantically unresolved;
+- attendance meanings are `P = Present`, `A = Absent`, `H = Holiday`, and `NA = Not Applicable`;
+- raw attendance code `N` remains semantically unresolved pending an explicit normalization decision;
 - template activity headers beginning with `<activity_name>` (including numbered source variants) are represented as the approved placeholder `<activity_name>` with `is_placeholder=true`;
-- `A. LKG` and `B. UKG` remain in `source_grade_label` with `grade_id=NULL`;
+- `A. LKG` maps to `LKG` and `B. UKG` maps to `UKG`, while preserving the original source label;
 - EVS, Science, and Social Science remain distinct subjects.
 
 ## Validation
@@ -111,11 +114,11 @@ It validates:
 - manifest source-file IDs and source-to-database table counts;
 - provenance completeness;
 - orphan enrollments/assessments/scores/attendance/days/measurements;
-- assessment score representation and exclusion of `77`, `87`, `89`;
-- attendance day range, raw-code presence, and trim-only normalization;
+- assessment score representation under the `0-10` or `A` rule, `A = Absent`, and exclusion of invalid/unknown score values;
+- attendance day range, raw-code presence, trim-only normalization, and approved code meanings;
 - duplicate source-location detection;
 - assessment/attendance duplicate group and member counts;
-- unresolved `A`, `H`, `N`, `NA`, and unresolved enrollment grades.
+- assessment code `A` retained with meaning `Absent`, mapping of `A. LKG` / `B. UKG`, and preservation of raw `N` as unresolved.
 
 ## Regression test
 
@@ -124,10 +127,10 @@ KC2_SOURCE_DIR="$KC2_SOURCE_DIR" PYTHONPATH=scripts/stage_e \
   python -m unittest scripts/stage_e/test_stage_e_parser.py
 ```
 
-For the accepted sanitized snapshot the parser must produce: 11 source files, 188 students, 317 enrollments, 3,453 assessment instances, 47,387 valid assessment scores, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 50/100 assessment duplicate groups/members, 4/8 attendance duplicate groups/members, 44 placeholder activities, and 9,346 failure entries.
+The accepted sanitized snapshot remains: 11 source files, 188 students, 317 enrollments, 3,453 assessment instances, **47,387 valid assessment scores**, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 50/100 assessment duplicate groups/members, 4/8 attendance duplicate groups/members, 44 placeholder activities, and **9,346 failure entries**. The confirmed score storage domain remains `0-10/A`; the correction package adds `A = Absent`, calculation semantics, attendance meanings, and LKG/UKG normalization without deleting valid score observations.
 
 ## Testing status
 
-The parser/failure generator has been run against all eleven sanitized workbook exports and reproduces the accepted Stage E source counts, duplicate counts, invalid score set, and 9,346 failure entries; placeholder-header normalization separately resolves 44 approved `<activity_name>` definitions. The generated failure workbook was verified to contain a Summary sheet plus one sheet per source workbook and exactly 9,346 failure entries. The existing completed live dataset has also been reconciled read-only against these expected counts and integrity checks, including 3,453 assessments, 47,387 scores, 1,882 attendance months, 46,763 attendance days, 1,786 measurements, 100 assessment duplicate members, and 8 attendance duplicate members in 4 groups.
+The accepted Phase 1 snapshot was previously validated against all eleven sanitized workbook exports under the same `0-10/A` storage domain now confirmed by the PM. Focused unit tests in this branch cover score parsing, `A = Absent`, calculation behavior (`A → 0` while remaining in the denominator), attendance meanings, and invalid-value rejection. The full workbook-backed regression still requires `KC2_SOURCE_DIR`; rerun it before any approved database apply when the eleven local workbook exports are available. The existing production dataset has not been modified by this branch.
 
 A destructive clean-database rebuild has **not** been executed against the production Supabase project. This repository therefore demonstrates code-level reproducibility plus validated live reconciliation, not a fresh production reset/reload test.

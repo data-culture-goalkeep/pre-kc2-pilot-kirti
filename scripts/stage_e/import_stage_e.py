@@ -3,7 +3,7 @@
 from __future__ import annotations
 import argparse, json, os
 from pathlib import Path
-from stage_e_common import CANONICAL_GRADES, expected_counts, parse_sources, write_failure_log
+from stage_e_common import ASSESSMENT_SCORE_MEANINGS, ATTENDANCE_MEANINGS, CANONICAL_GRADES, expected_counts, parse_sources, write_failure_log
 
 PERIOD_ORDER={"Baseline":0,"Term 1":1,"Term 2":2,"Term 3":3}
 
@@ -15,6 +15,9 @@ def upsert(cur,table,values,conflict,ret):
     sets=",".join(f"{c}=excluded.{c}" for c in cols if c not in keys)
     cur.execute(f"insert into public.{table} ({','.join(cols)}) values ({','.join(['%s']*len(cols))}) on conflict ({conflict}) do update set {sets} returning {ret}",[values[c] for c in cols])
     return cur.fetchone()[ret]
+
+def assessment_score_code_values(code,r,prov):
+    return {"score_code":code,"meaning":ASSESSMENT_SCORE_MEANINGS.get(code),**prov(r)}
 
 def source_row_id(cur,table,id_col,sfid,sheet,row):
     rec=q1(cur,f"select {id_col} from public.{table} where source_file_id=%s and source_sheet_name=%s and source_row_number=%s order by {id_col} limit 1",(sfid,sheet,row))
@@ -49,9 +52,9 @@ def apply_data(conn,data):
         for period,r in sorted(data.periods.items(),key=lambda x:PERIOD_ORDER[x[0]]):
             period_ids[period]=upsert(cur,"assessment_periods",{"period_code":period,"source_label":period,"sort_order":PERIOD_ORDER[period],**prov(r)},"period_code","assessment_period_id")
         for code,r in data.score_codes.items():
-            upsert(cur,"assessment_score_codes",{"score_code":code,"meaning":None,**prov(r)},"score_code","score_code")
+            upsert(cur,"assessment_score_codes",assessment_score_code_values(code,r,prov),"score_code","score_code")
         for code,r in sorted(data.attendance_codes.items()):
-            upsert(cur,"attendance_status_codes",{"status_code":code,"meaning":None,**prov(r)},"status_code","status_code")
+            upsert(cur,"attendance_status_codes",{"status_code":code,"meaning":ATTENDANCE_MEANINGS.get(code),**prov(r)},"status_code","status_code")
 
         for s in data.students:
             upsert(cur,"students",{"student_id":s["student_id"],"student_name":s["student_name"],"source_enrollment_year_label":s["source_enrollment_year_label"],"gender":s["gender"],"date_of_birth":s["date_of_birth"],"social_category":s["social_category"],"program_type":s["program_type"],**prov(s)},"student_id","student_id")
