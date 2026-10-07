@@ -45,9 +45,12 @@ Cell-level records also include `source_column_name`.
 
 Reviewer decisions now applied by the Stage E parser/import path and forward correction migration:
 
-- assessment scores are valid only as integers `1-10`;
-- assessment code `A` is invalid and is retained only as failure/audit evidence, not as a valid score;
-- source values `77`, `87`, `89`, `0`, and any other value outside integer `1-10` are failure evidence rather than valid `assessment_scores`;
+- numeric assessment scores `0-10` are valid;
+- assessment code `A` is valid and means **Absent**;
+- `A` remains stored as `raw_score_value='A'`, `numeric_score=NULL`, `score_code='A'`; it is never rewritten to numeric zero in source storage;
+- for derived calculations, numeric scores use their numeric value and `A` uses effective value `0`; `A` remains included in the denominator;
+- source values `77`, `87`, `89`, and unrecognized non-numeric score values are failure evidence rather than valid `assessment_scores`;
+- `student_assessments.reported_average_score` remains source-reported data and is not overwritten by derived calculations;
 - `A. LKG` maps to canonical grade `LKG`, while the original source label remains in `source_grade_label`;
 - `B. UKG` maps to canonical grade `UKG`, while the original source label remains in `source_grade_label`;
 - attendance meanings are `P = Present`, `A = Absent`, `H = Holiday`, and `NA = Not Applicable`;
@@ -74,6 +77,6 @@ All Phase 1 tables are created in `public`, which is an exposed Supabase schema,
 Schema migrations:
 
 - `supabase/migrations/20261001074553_create_phase1_schema.sql` — original Phase 1 schema.
-- `supabase/migrations/20261005150500_apply_pm_phase1_corrections.sql` — forward correction migration implementing the PM-approved score, grade-label, and attendance-meaning decisions without rewriting the original migration.
+- `supabase/migrations/20261005150500_apply_pm_phase1_corrections.sql` — non-destructive forward correction migration implementing the PM-approved score-code meaning, grade-label, and attendance-meaning decisions without rewriting the original migration.
 
 Stage C remains the original schema baseline. The correction migration must be applied only to an explicitly approved target after source regression and dry-run review.
