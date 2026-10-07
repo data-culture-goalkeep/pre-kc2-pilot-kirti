@@ -55,10 +55,12 @@ Writes require both --apply and SUPABASE_DB_URL:
 The apply path verifies the approved schema and runs writes in one transaction. Reference entities/students/enrollments reconcile through approved keys. Assessment and attendance parents reconcile by source workbook + sheet + row provenance, preserving legitimate logical duplicates. Score/day cells reconcile through their parent and activity/day keys. Duplicate flags are recomputed after reconciliation.
 
 ## 6. Data-quality handling
-PM reviewer decisions supersede the earlier ambiguous-value treatment:
-- Assessment scores are valid only as integers 1-10.
-- Assessment A is invalid and remains only as failure/audit evidence.
-- Scores 0, 77, 87, 89, and any other non-integer/out-of-range values are failure evidence, not valid scores.
+PM-confirmed rules:
+- Numeric assessment scores 0-10 are valid.
+- Assessment `A` is valid and means Absent. It remains stored as a score code with its raw source value preserved.
+- For derived calculations only, `A` contributes effective value 0 and remains included in the denominator.
+- Scores 77, 87, 89, and unrecognized non-numeric values are failure evidence, not valid score rows.
+- `student_assessments.reported_average_score` remains source-reported historical data and is not overwritten by derived calculations.
 - Attendance meanings are P=Present, A=Absent, H=Holiday, and NA=Not Applicable.
 - Raw attendance code N remains unresolved pending an explicit normalization decision.
 - A. LKG maps to LKG and B. UKG maps to UKG while preserving source_grade_label.
@@ -81,7 +83,7 @@ Generation:
 
 Accepted artifact: KC2_Stage_E_Migration_Failure_Log.xlsx in the sanitized-source Drive folder. Generated artifacts under artifacts/ are not committed.
 
-Structure: Summary sheet plus one sheet per source workbook. Failure rows contain source sheet, row, column where applicable, failure scope, reason, and raw value. The previous snapshot had **9,346 failure entries**; this count must be regenerated because the approved 1-10-only rule moves additional values (including A and any 0 scores) into failure evidence.
+Structure: Summary sheet plus one sheet per source workbook. Failure rows contain source sheet, row, column where applicable, failure scope, reason, and raw value. Accepted snapshot: **9,346 failure entries**. The confirmed `0-10/A` storage rule preserves the accepted score-failure classification.
 
 ## 9. Validation
 Read-only validation:
@@ -92,7 +94,7 @@ Regression:
 
     KC2_SOURCE_DIR="$KC2_SOURCE_DIR" PYTHONPATH=scripts/stage_e python -m unittest scripts/stage_e/test_stage_e_parser.py
 
-Checks cover source registry/counts, provenance, orphans, 1-10 assessment representation, exclusion of invalid score/code rows, approved attendance meanings, trim-only normalization, duplicate source locations, duplicate groups/member flags, mapped LKG/UKG labels, and raw N remaining unresolved.
+Checks cover source registry/counts, provenance, orphans, `0-10/A` assessment representation, `A = Absent`, exclusion of 77/87/89 and unknown score codes, approved attendance meanings, trim-only normalization, duplicate source locations, duplicate groups/member flags, mapped LKG/UKG labels, and raw N remaining unresolved.
 
 | Metric | Validated count |
 | --- | ---: |
@@ -100,14 +102,14 @@ Checks cover source registry/counts, provenance, orphans, 1-10 assessment repres
 | students | 188 |
 | enrollments | 317 |
 | assessments | 3,453 |
-| valid assessment scores | **Regenerate after PM corrections** |
+| valid assessment scores | 47,387 |
 | attendance months | 1,882 |
 | attendance days | 46,763 |
 | measurements | 1,786 |
 | assessment duplicates | 50 groups / 100 members |
 | attendance duplicates | 4 groups / 8 members |
 | placeholder activities | 44 |
-| failure entries | **Regenerate after PM corrections** |
+| failure entries | 9,346 |
 
 The accepted live dataset was reconciled read-only. **No clean isolated Stage C-to-Stage E end-to-end database rebuild has been performed. Production was not reset/rebuilt.**
 
@@ -138,11 +140,13 @@ Run order: verify manifest/sources; run regression; run importer dry-run and ins
 ## 11. Known limitations / decisions
 - Source workbooks remain external to Git by design.
 - Clean isolated rebuild is not demonstrated; reproducibility evidence is source regression/failure-log regeneration plus read-only live reconciliation.
-- Assessment A is invalid; 1-10 is the only valid score domain.
+- Assessment storage domain is numeric 0-10 or score code A.
+- Assessment A means Absent; for derived calculations A contributes 0 and remains in the denominator.
+- Source-reported assessment averages remain historical source values and are not overwritten.
 - P/A/H/NA attendance meanings are approved; raw N remains unresolved.
-- A. LKG / B. UKG are mapped to LKG / UKG.
+- A. LKG / B. UKG are mapped to LKG / UKG while source labels are preserved.
 - Placeholder activities remain intentional configurable placeholders.
-- 0/77/87/89 and other invalid scores remain failure evidence.
+- 77/87/89 and other unrecognized non-numeric assessment values remain failure evidence.
 - Assessment/attendance duplicates are preserved and flagged.
 - RLS is enabled but client-facing authorization policies are not defined.
 - Phase 2 has not started.
@@ -164,7 +168,7 @@ Run order: verify manifest/sources; run regression; run importer dry-run and ins
 | Assessment duplicate handling | Completed | parser/importer/test | 50/100 snapshot |
 | Attendance duplicate handling | Completed | parser/importer/test | 4/8 snapshot |
 | Failure-log regeneration | Completed | generator + external artifact | Artifact not committed |
-| Corrected failure log reproducible | **Pending rerun** | regression/generated log | Count changes under 1-10-only rule |
+| 9,346 failures reproducible | Completed | regression/generated log | Accepted snapshot |
 | Read-only DB validation | Completed | validate_stage_e.py | DB connection required |
 | Accepted live reconciliation | **Pending correction apply + validation** | Stage E evidence | Live DB not modified by this branch |
 | Clean isolated rebuild | **Not completed** | documented limitation | Not run |
@@ -172,4 +176,4 @@ Run order: verify manifest/sources; run regression; run importer dry-run and ins
 | Phase 2 | Not started by design | phase boundary | Outside Phase 1 |
 
 ## Handover boundary
-The original Phase 1 handover is superseded by the PM correction package in this branch for the score, attendance-meaning, and grade-label decisions above. Merge/apply decisions remain human-controlled. The branch does not modify validated live data. Before acceptance, rerun the sanitized-source regression and failure-log generation, record corrected counts, review the PR, then explicitly approve any database migration.
+The PM correction package in this branch clarifies score semantics/calculation behavior, attendance meanings, and grade-label mappings while preserving the accepted Phase 1 score observations and counts. Merge/apply decisions remain human-controlled. The branch does not modify validated live data. Review the PR and rerun the workbook-backed regression when the local sanitized exports are available before any explicitly approved database migration.
