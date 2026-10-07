@@ -2,18 +2,10 @@
 """Stage E importer entry point with PM-confirmed assessment-code semantics."""
 from __future__ import annotations
 
-from pathlib import Path
-import types
-
+import import_stage_e_core as core
 from stage_e_common import ASSESSMENT_SCORE_MEANINGS
 
-_core_path = Path(__file__).with_name("import_stage_e_core.txt")
-_core = types.ModuleType("import_stage_e_core")
-_core.__file__ = str(_core_path)
-_core.__name__ = "import_stage_e_core"
-exec(compile(_core_path.read_text(encoding="utf-8"), str(_core_path), "exec"), _core.__dict__)
-
-_original_upsert = _core.upsert
+_original_upsert = core.upsert
 
 def _upsert_with_confirmed_score_meaning(cur, table, values, conflict, ret):
     if table == "assessment_score_codes":
@@ -23,9 +15,9 @@ def _upsert_with_confirmed_score_meaning(cur, table, values, conflict, ret):
             values["meaning"] = ASSESSMENT_SCORE_MEANINGS[code]
     return _original_upsert(cur, table, values, conflict, ret)
 
-_core.upsert = _upsert_with_confirmed_score_meaning
-apply_data = _core.apply_data
-main = _core.main
+core.upsert = _upsert_with_confirmed_score_meaning
+apply_data = core.apply_data
+main = core.main
 
 if __name__ == "__main__":
     main()
