@@ -24,10 +24,28 @@
       <div class="session"><span id="sessionLabel">Not signed in</span><button class="secondary" id="signOutButton" hidden>Sign out</button><button class="primary" id="attendanceJump">Students & attendance</button></div>
     </header>
     <section id="work" class="page active">
-      <p class="eyebrow">Monday, 22 September</p><h1>Start with students who need attention.</h1>
-      <div class="grid four"><div class="card"><span>Students enrolled</span><b>148</b><small>+11 from 2024-25</small></div><div class="card"><span>Need follow-up</span><b>9</b><small>4 new this month</small></div><div class="card"><span>Attendance this month</span><b>87%</b><small>-3 pts from August</small></div><div class="card"><span>Assessment coverage</span><b>82%</b><small>Term 2 • 121 of 148</small></div></div>
-      <div class="notice">Confirm before build: risk thresholds are illustrative and need final approval.</div>
-      <div class="grid two"><div class="card"><h3>Follow-up queue</h3><div class="row"><span>Student A • Attendance decline</span><em>Review</em></div><div class="row"><span>Student B • Low learning score</span><em>High</em></div><div class="row"><span>Student C • Combined support flag</span><em>Review</em></div></div><div class="card"><h3>What needs completing</h3><div class="row"><span>Grade VI attendance</span><small>12 pending</small></div><div class="row"><span>Term 2 English assessment</span><small>27 pending</small></div><div class="row"><span>Follow-up outcomes</span><small>3 overdue</small></div></div></div>
+      <h1>My Work</h1>
+      <p class="muted">Authenticated overview of available programme records and data-quality review items. No assignments or deadlines are inferred.</p>
+      <div id="workAuth" class="state">Sign in under Students &amp; Attendance to view live My Work information.</div>
+      <div id="workWorkspace" hidden>
+        <div class="toolbar">
+          <select id="workYear" aria-label="Academic year"><option value="">All academic years</option></select>
+          <button id="workRefresh" class="secondary" type="button">Refresh</button>
+        </div>
+        <div id="workState" class="state" role="status">Loading programme records…</div>
+        <div id="workCards" class="grid four"></div>
+        <div class="grid two">
+          <div class="card"><h3>Records requiring data review</h3><div id="workReview"></div></div>
+          <div class="card"><h3>Assessment coverage by period</h3><div id="workPeriods"></div></div>
+        </div>
+        <div class="card">
+          <h3>What you can do next</h3>
+          <div class="row"><span>Review student and attendance histories</span><button class="secondary" type="button" data-work-jump="students">Open Students</button></div>
+          <div class="row"><span>Inspect assessment records and duplicate candidates</span><button class="secondary" type="button" data-work-jump="assessments">Open Assessments</button></div>
+          <div class="row"><span>Explore programme trends by academic year</span><button class="secondary" type="button" data-work-jump="insights">Open Insights</button></div>
+        </div>
+        <div class="notice">The approved Phase 1 schema does not contain a follow-up action or task-assignment table. This view does not claim anyone has been assigned work; it highlights existing records that can be reviewed.</div>
+      </div>
     </section>
     <section id="students" class="page" data-state="auth">
       <h1>One child, one connected history.</h1>
@@ -84,5 +102,6 @@
 <script type="module" src="./app.mjs"></script>
 <script type="module" src="./assessment-init.mjs"></script>
 <script type="module" src="./insights-init.mjs"></script>
+<script type="module" src="./my-work-init.mjs"></script>
 </body>
 </html>
