@@ -58,11 +58,31 @@
       </div>
     </section>
     <section id="insights" class="page">
-      <h1>Answer the agreed programme questions.</h1><div class="grid four"><div class="card"><span>Students reached</span><b>148</b></div><div class="card"><span>Female</span><b>49%</b></div><div class="card"><span>SC / ST</span><b>94%</b></div><div class="card"><span>Improved since Term 1</span><b>61%</b></div></div><div class="card"><h3>Agreed Key Questions</h3><ol><li>Who are we reaching? — 148 / 148 covered</li><li>Are students attending? — 142 / 148 linked</li><li>How is attendance changing? — 12 need review</li><li>What is learning distribution? — 121 comparable</li><li>Who needs combined support? — 9 flagged</li><li>What support is happening? — 9 open</li><li>Which groups are progressing? — 121 comparable</li><li>Is BMI associated with learning? — 104 linkable records</li></ol></div><div class="notice">BMI analysis remains provisional until an authoritative Indian child/adolescent reference is confirmed.</div>
+      <h1>Programme Insights</h1>
+      <p class="muted">Read-only programme overview from approved Phase 1 records. Figures reflect available source records, not verified outcomes.</p>
+      <div id="insightsAuth" class="state">Sign in under Students &amp; Attendance to view live programme insights.</div>
+      <div id="insightsWorkspace" hidden>
+        <div class="toolbar">
+          <select id="insightsYear" aria-label="Academic year"><option value="">All academic years</option></select>
+          <button type="button" class="secondary" id="insightsRefresh">Refresh data</button>
+        </div>
+        <div id="insightsState" class="state" role="status">Select Programme Insights to load live data.</div>
+        <div id="insightsCards" class="grid four"></div>
+        <div class="grid two">
+          <div class="card"><h3>Student enrolments by grade</h3><div id="insightsGrades"></div></div>
+          <div class="card"><h3>Attendance coverage</h3><div id="insightsAttendance"></div></div>
+        </div>
+        <div class="grid two">
+          <div class="card"><h3>Assessment coverage by period</h3><div id="insightsPeriods"></div></div>
+          <div class="card"><h3>Source-data review</h3><div id="insightsReview"></div></div>
+        </div>
+        <div class="notice">Interpretation: attendance percentages are source-reported. Assessment counts are records, not unique student outcomes. Duplicate candidates remain visible. No BMI categories or learning-improvement claims are inferred without agreed definitions.</div>
+      </div>
     </section>
   </main>
 </div>
 <script type="module" src="./app.mjs"></script>
 <script type="module" src="./assessment-init.mjs"></script>
+<script type="module" src="./insights-init.mjs"></script>
 </body>
 </html>
