@@ -1,0 +1,11 @@
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
+import {setupAssessments} from './assessments.mjs';
+const db=createClient('https://tyhwkudogenugnnfgxav.supabase.co','sb_publishable_UvoJmNRNQXBuQVO1w7qCAA_Aqy47QYo');
+let session=null;
+const assessments=setupAssessments({supabase:db,getSession:()=>session});
+const assessmentsNav=document.querySelector('[data-page="assessments"]');
+assessmentsNav.addEventListener('click',()=>assessments.open());
+const initial=await db.auth.getSession();
+session=initial.data.session;
+db.auth.onAuthStateChange((_event,next)=>{session=next;if(!session)assessments.reset();else if(assessmentsNav.classList.contains('active'))assessments.open();});
+if(assessmentsNav.classList.contains('active'))assessments.open();
