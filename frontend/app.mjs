@@ -17,12 +17,17 @@ async function renderTermChart(){
   const request=++termChartRequest;
   if(!session){termChart.textContent='Sign in to see available term averages.';return;}
   if(!isActiveYear()){termChart.textContent='No verified assessment data for this academic year.';return;}
-  termChart.textContent='Loading term averages…';
+  const selectedGrade=gradeFilter.value;
+  termChart.textContent='Loading term averages for '+(selectedGrade||'all grades')+'…';
   const {data,error}=await supabase.rpc('kc2_rebuild_term_averages',{p_grade:gradeFilter.value||null});
-  if(request!==termChartRequest)return;
+  if(request!==termChartRequest||selectedGrade!==gradeFilter.value||!isActiveYear()||!session)return;
   if(error){termChart.textContent='Unable to load term averages.';return;}
   const records=Array.isArray(data)?data:[];
   termChart.replaceChildren();
+  const context=document.createElement('p');
+  context.className='readonly-note';
+  context.textContent='Grade: '+(selectedGrade||'All grades')+' • Academic year: '+academicYearFilter.value;
+  termChart.append(context);
   const barGroup=document.createElement('div');
   barGroup.className='vertical-bars';
   for(const term of ['1','2','3']){
@@ -39,7 +44,7 @@ async function renderTermChart(){
   termChart.append(barGroup);
   const note=document.createElement('p');
   note.className='readonly-note';
-  note.textContent=records.length?'Only mapped scores are included. Sample sizes: '+records.map(x=>'Term '+x.term+': '+x.score_count+' scores').join('; ')+'. Missing terms are not zero.':'No term-labelled numeric scores available for this grade.';
+  note.textContent=records.length?'Only mapped scores are included. Sample sizes: '+records.map(x=>'Term '+x.term+': '+x.score_count+' scores').join('; ')+'. Missing terms are not zero.':'No mapped term scores available for '+(selectedGrade?'Grade '+selectedGrade:'the selected cohort')+'. Other scores have not yet been assigned verified terms.';
   termChart.append(note);
 }
 
@@ -107,7 +112,7 @@ studentSearch.addEventListener('input',filterStudents);
 gradeFilter.addEventListener('change',()=>{filterStudents();renderGradeChart();renderTermChart();});
 document.getElementById('signInForm').addEventListener('submit',async event=>{event.preventDefault();authMessage.textContent='Signing in…';const form=new FormData(event.currentTarget);const{error}=await supabase.auth.signInWithPassword({email:String(form.get('email')),password:String(form.get('password'))});if(error)authMessage.textContent=error.message;});
 signOutButton.onclick=async()=>{await supabase.auth.signOut();};
-function updateAuthUi(message=''){authPanel.hidden=Boolean(session);studentContent.hidden=!session;signOutButton.hidden=!session;sessionLabel.textContent=session?.user?.email?`Signed in as ${session.user.email}`:'Not signed in';if(message)authMessage.textContent=message;renderGradeChart();}
+function updateAuthUi(message=''){authPanel.hidden=Boolean(session);studentContent.hidden=!session;signOutButton.hidden=!session;sessionLabel.textContent=session?.user?.email?`Signed in as ${session.user.email}`:'Not signed in';if(message)authMessage.textContent=message;renderGradeChart();renderTermChart();}
 async function refreshStudentsView(){if(!isActiveYear())return;if(!session){updateAuthUi();setState('auth');return;}updateAuthUi();await loadStudents();}
 const{data:{session:initialSession}}=await supabase.auth.getSession();session=initialSession;updateAuthUi();if(document.querySelector('[data-page="students"]').classList.contains('active'))refreshStudentsView();
 supabase.auth.onAuthStateChange((_event,nextSession)=>{session=nextSession;updateAuthUi();if(document.querySelector('[data-page="students"]').classList.contains('active'))queueMicrotask(()=>refreshStudentsView());});
