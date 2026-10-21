@@ -129,20 +129,31 @@ let authCheckSequence=0;
 async function verifyAndDisplay(nextSession){
   const check=++authCheckSequence;
   session=null;
-  updateAuthUi(nextSession?'Checking team authorization…':'');
+  updateAuthUi(nextSession?'Checking team authorization…':'Sign in with an approved team account.');
   if(!nextSession)return;
-  const {data,error}=await supabase.rpc('kc2_is_authorized');
-  if(check!==authCheckSequence)return;
-  if(error||data!==true){
-    await supabase.auth.signOut({scope:'local'});
+  let timeoutId;
+  try{
+    const result=await Promise.race([
+      supabase.rpc('kc2_is_authorized'),
+      new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Authorization check timed out. Please try signing in again.')),12000);})
+    ]);
+    if(check!==authCheckSequence)return;
+    if(result.error)throw result.error;
+    if(result.data!==true){
+      session=null;
+      updateAuthUi('This account is not approved for Vanavil access. Ask an administrator to authorize your email.');
+      return;
+    }
+    session=nextSession;
+    updateAuthUi('');
+    await loadStudents();
+  }catch(error){
     if(check!==authCheckSequence)return;
     session=null;
-    updateAuthUi('This account is not approved for Vanavil access. Contact your administrator.');
-    return;
+    updateAuthUi(error?.message||'Authorization failed. Please try again.');
+  }finally{
+    clearTimeout(timeoutId);
   }
-  session=nextSession;
-  updateAuthUi('');
-  await loadStudents();
 }
 const{data:{session:initialSession}}=await supabase.auth.getSession();
 await verifyAndDisplay(initialSession);
