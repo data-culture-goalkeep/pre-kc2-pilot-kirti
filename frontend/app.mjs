@@ -34,16 +34,12 @@ async function loadStudents(){if(!isActiveYear())return;setState('loading');try{
 function renderStudentRows(rows){studentBody.innerHTML='';for(const row of rows){const tr=document.createElement('tr');const pct=row.attendancePercent==null?'—':`${Number(row.attendancePercent).toFixed(1)}%`;tr.innerHTML=`<td><button class="linkbutton" data-student-id="${escapeHtml(row.student_id)}">${escapeHtml(row.student_name)}</button><small>${escapeHtml(row.student_id)}</small></td><td>${escapeHtml(row.grade)}</td><td>${escapeHtml(row.academicYear)}</td><td>${escapeHtml(row.attendanceMonthLabel)}</td><td>${pct}</td>`;tr.querySelector('button').onclick=()=>loadAttendanceDetail(row);studentBody.appendChild(tr);}}
 async function loadAttendanceDetail(student){if(!isActiveYear())return;attendanceDetail.hidden=false;document.getElementById('attendanceTitle').textContent=`${student.student_name} • ${student.attendanceMonthLabel} (provisional)`;attendanceGrid.innerHTML='<div class="muted">Loading staged attendance…</div>';if(!student.attendanceMonth){attendanceGrid.innerHTML='<div class="muted">No staged attendance exists for this student.</div>';return;}const {data,error}=await supabase.rpc('kc2_rebuild_attendance',{p_student_id:student.student_id,p_month:student.attendanceMonth});if(error){attendanceGrid.innerHTML=`<div class="errorText">Could not load attendance: ${escapeHtml(error.message)}</div>`;return;}attendanceGrid.innerHTML=(data||[]).map(day=>`<div class="daychip"><b>${day.day_of_month}</b><span>${escapeHtml(day.raw_status_code)}</span><small>${escapeHtml(day.meaning)}</small></div>`).join('')||'<div class="muted">No staged attendance days.</div>';}
 function populateGradeFilter(){
-  const current=gradeFilter.value;
-  const grades=[...new Set(studentRows.map(row=>String(row.grade??'').trim()).filter(Boolean))];
-  const priority=grade=>{const g=grade.toUpperCase();if(g==='LKG')return 0;if(g==='UKG')return 1;const roman=['I','II','III','IV','V','VI','VII','VIII','IX','X'];const n=roman.indexOf(g);return n<0?100:2+n;};
-  grades.sort((a,b)=>priority(a)-priority(b)||a.localeCompare(b));
-  gradeFilter.replaceChildren(new Option('All grades',''),...grades.map(g=>new Option(g,g)));
-  gradeFilter.value=grades.includes(current)?current:'';
+  // Options are rendered in HTML so they remain visible before sign-in.
+  // Keep any selection across authentication and tab changes.
 }
 function filterStudents(){
   const query=studentSearch.value.trim().toLowerCase(),grade=gradeFilter.value;
-  const filtered=studentRows.filter(row=>(!grade||String(row.grade??'').trim()===grade)&&`${row.student_name} ${row.student_id} ${row.grade}`.toLowerCase().includes(query));
+  const filtered=studentRows.filter(row=>(!grade||String(row.grade??'').trim().toUpperCase()===grade.toUpperCase())&&`${row.student_name} ${row.student_id} ${row.grade}`.toLowerCase().includes(query));
   attendanceDetail.hidden=true;
   renderStudentRows(filtered);
   setState(filtered.length?'ready':'empty');
