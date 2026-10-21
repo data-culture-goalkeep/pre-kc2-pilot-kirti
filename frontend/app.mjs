@@ -24,24 +24,17 @@ async function renderTermChart(){
   const records=Array.isArray(data)?data:[];
   termChart.replaceChildren();
   const barGroup=document.createElement('div');
-  barGroup.className='grade-bars';
+  barGroup.className='vertical-bars';
   for(const term of ['1','2','3']){
     const item=records.find(x=>String(x.term)===term);
-    const row=document.createElement('div');
-    row.className='grade-bar';
-    const name=document.createElement('span');
-    name.textContent='Term '+term;
-    const track=document.createElement('div');
-    track.className='grade-track';
-    const fill=document.createElement('div');
-    fill.className='grade-fill';
-    fill.style.width=item?Math.max(0,Math.min(100,Number(item.average_score)*10))+'%':'0%';
-    track.append(fill);
-    const count=document.createElement('strong');
-    count.className='grade-value';
-    count.textContent=item?Number(item.average_score).toFixed(2):'—';
-    row.append(name,track,count);
-    barGroup.append(row);
+    const group=document.createElement('div');group.className='vertical-bar-item';
+    const value=document.createElement('strong');value.className='vertical-bar-value';
+    value.textContent=item?Number(item.average_score).toFixed(2):'—';
+    const track=document.createElement('div');track.className='vertical-bar-track';
+    const fill=document.createElement('div');fill.className='vertical-bar-fill';
+    fill.style.height=item?Math.max(0,Math.min(100,Number(item.average_score)*10))+'%':'0%';
+    const label=document.createElement('span');label.className='vertical-bar-label';label.textContent='Term '+term;
+    track.append(fill);group.append(value,track,label);barGroup.append(group);
   }
   termChart.append(barGroup);
   const note=document.createElement('p');
@@ -60,7 +53,18 @@ function renderGradeChart(){
   const selected=gradeFilter.value.toUpperCase();
   const counts=grades.map(grade=>({grade,n:studentRows.filter(row=>String(row.grade||'').trim().toUpperCase()===grade && (!selected||selected===grade)).length}));
   const max=Math.max(1,...counts.map(item=>item.n));
-  gradeChart.innerHTML='<div class="grade-bars">'+counts.map(item=>'<div class="grade-bar"><span>'+item.grade+'</span><div class="grade-track"><div class="grade-fill" style="width:'+((item.n/max)*100)+'%"></div></div><strong class="grade-value">'+item.n+'</strong></div>').join('')+'</div>';
+  gradeChart.replaceChildren();
+  const bars=document.createElement('div');
+  bars.className='vertical-bars';
+  for(const item of counts){
+    const group=document.createElement('div');group.className='vertical-bar-item';
+    const value=document.createElement('strong');value.className='vertical-bar-value';value.textContent=String(item.n);
+    const track=document.createElement('div');track.className='vertical-bar-track';
+    const fill=document.createElement('div');fill.className='vertical-bar-fill';fill.style.height=(item.n/max*100)+'%';
+    const label=document.createElement('span');label.className='vertical-bar-label';label.textContent=item.grade;
+    track.append(fill);group.append(value,track,label);bars.append(group);
+  }
+  gradeChart.append(bars);
 }
 
 function isActiveYear(){return academicYearFilter.value===REBUILD_YEAR;}
