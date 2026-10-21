@@ -112,9 +112,42 @@ studentSearch.addEventListener('input',filterStudents);
 gradeFilter.addEventListener('change',()=>{filterStudents();renderGradeChart();renderTermChart();});
 document.getElementById('signInForm').addEventListener('submit',async event=>{event.preventDefault();authMessage.textContent='Signing in…';const form=new FormData(event.currentTarget);const{error}=await supabase.auth.signInWithPassword({email:String(form.get('email')),password:String(form.get('password'))});if(error)authMessage.textContent=error.message;});
 signOutButton.onclick=async()=>{await supabase.auth.signOut();};
-function updateAuthUi(message=''){authPanel.hidden=Boolean(session);studentContent.hidden=!session;signOutButton.hidden=!session;sessionLabel.textContent=session?.user?.email?`Signed in as ${session.user.email}`:'Not signed in';if(message)authMessage.textContent=message;renderGradeChart();renderTermChart();}
+const loginGate=document.getElementById('loginGate'),appShell=document.querySelector('.shell');
+function updateAuthUi(message=''){
+  const permitted=Boolean(session);
+  loginGate.hidden=permitted;
+  appShell.hidden=!permitted;
+  authPanel.hidden=false;
+  studentContent.hidden=!permitted;
+  signOutButton.hidden=!permitted;
+  sessionLabel.textContent=session?.user?.email?'Signed in as '+session.user.email:'Not signed in';
+  if(message)authMessage.textContent=message;
+  renderGradeChart();renderTermChart();
+}
 async function refreshStudentsView(){if(!isActiveYear())return;if(!session){updateAuthUi();setState('auth');return;}updateAuthUi();await loadStudents();}
-const{data:{session:initialSession}}=await supabase.auth.getSession();session=initialSession;updateAuthUi();if(document.querySelector('[data-page="students"]').classList.contains('active'))refreshStudentsView();
-supabase.auth.onAuthStateChange((_event,nextSession)=>{session=nextSession;updateAuthUi();if(document.querySelector('[data-page="students"]').classList.contains('active'))queueMicrotask(()=>refreshStudentsView());});
+let authCheckSequence=0;
+async function verifyAndDisplay(nextSession){
+  const check=++authCheckSequence;
+  session=null;
+  updateAuthUi(nextSession?'Checking team authorization…':'');
+  if(!nextSession)return;
+  const {data,error}=await supabase.rpc('kc2_is_authorized');
+  if(check!==authCheckSequence)return;
+  if(error||data!==true){
+    await supabase.auth.signOut({scope:'local'});
+    if(check!==authCheckSequence)return;
+    session=null;
+    updateAuthUi('This account is not approved for Vanavil access. Contact your administrator.');
+    return;
+  }
+  session=nextSession;
+  updateAuthUi('');
+  await loadStudents();
+}
+const{data:{session:initialSession}}=await supabase.auth.getSession();
+await verifyAndDisplay(initialSession);
+supabase.auth.onAuthStateChange((_event,nextSession)=>{
+  queueMicrotask(()=>verifyAndDisplay(nextSession));
+});
 document.querySelectorAll('[data-score-input]').forEach(input=>{input.addEventListener('change',()=>{const parsed=parseAssessmentScore(input.value);input.setCustomValidity(parsed?'':'Enter 0–10 or A for Absent.');if(parsed)input.value=parsed.raw;input.reportValidity();});});
 function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
