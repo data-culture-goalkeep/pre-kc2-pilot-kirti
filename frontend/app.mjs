@@ -10,6 +10,46 @@ let session=null,studentRows=[],statusMeanings=new Map();
 const academicYearFilter=document.getElementById('academicYearFilter');
 const gradeFilter=document.getElementById('gradeFilter');
 const REBUILD_YEAR='2025-26';
+const termChart=document.getElementById('termChart');
+let termChartRequest=0;
+async function renderTermChart(){
+  if(!termChart)return;
+  const request=++termChartRequest;
+  if(!session){termChart.textContent='Sign in to see available term averages.';return;}
+  if(!isActiveYear()){termChart.textContent='No verified assessment data for this academic year.';return;}
+  termChart.textContent='Loading term averages…';
+  const {data,error}=await supabase.rpc('kc2_rebuild_term_averages',{p_grade:gradeFilter.value||null});
+  if(request!==termChartRequest)return;
+  if(error){termChart.textContent='Unable to load term averages.';return;}
+  const records=Array.isArray(data)?data:[];
+  termChart.replaceChildren();
+  const barGroup=document.createElement('div');
+  barGroup.className='grade-bars';
+  for(const term of ['1','2','3']){
+    const item=records.find(x=>String(x.term)===term);
+    const row=document.createElement('div');
+    row.className='grade-bar';
+    const name=document.createElement('span');
+    name.textContent='Term '+term;
+    const track=document.createElement('div');
+    track.className='grade-track';
+    const fill=document.createElement('div');
+    fill.className='grade-fill';
+    fill.style.width=item?Math.max(0,Math.min(100,Number(item.average_score)*10))+'%':'0%';
+    track.append(fill);
+    const count=document.createElement('strong');
+    count.className='grade-value';
+    count.textContent=item?Number(item.average_score).toFixed(2):'—';
+    row.append(name,track,count);
+    barGroup.append(row);
+  }
+  termChart.append(barGroup);
+  const note=document.createElement('p');
+  note.className='readonly-note';
+  note.textContent=records.length?'Only mapped scores are included. Sample sizes: '+records.map(x=>'Term '+x.term+': '+x.score_count+' scores').join('; ')+'. Missing terms are not zero.':'No term-labelled numeric scores available for this grade.';
+  termChart.append(note);
+}
+
 const gradeChart=document.getElementById('gradeChart');
 function renderGradeChart(){
   if(!gradeChart)return;
@@ -35,6 +75,7 @@ function applyAcademicYear(){
   }
   attendanceDetail.hidden=true;
   renderGradeChart();
+  renderTermChart();
   if(available&&document.getElementById('students').classList.contains('active'))refreshStudentsView();
 }
 academicYearFilter.addEventListener('change',applyAcademicYear);
@@ -44,7 +85,7 @@ navs.forEach(button=>{button.onclick=()=>{navs.forEach(item=>item.classList.remo
 document.getElementById('attendanceJump').onclick=()=>document.querySelector('[data-page="students"]').click();
 function setState(name,message=''){studentsPage.dataset.state=name;document.querySelectorAll('[data-student-state]').forEach(el=>{el.hidden=el.dataset.studentState!==name;});const target=document.querySelector(`[data-student-state="${name}"]`);if(target&&message)target.textContent=message;}
 async function fetchAll(table,columns,orderColumn){const pageSize=1000,rows=[];for(let from=0;;from+=pageSize){let query=supabase.from(table).select(columns).range(from,from+pageSize-1);if(orderColumn)query=query.order(orderColumn,{ascending:true});const{data,error}=await query;if(error)throw error;rows.push(...(data??[]));if(!data||data.length<pageSize)break;}return rows;}
-async function loadStudents(){if(!isActiveYear())return;setState('loading');try{const {data,error}=await supabase.rpc('kc2_rebuild_students');if(error)throw error;if(!isActiveYear())return;studentRows=Array.isArray(data)?data:[];populateGradeFilter();filterStudents();renderGradeChart();}catch(error){if(isUnauthorizedError(error)){await supabase.auth.signOut({scope:'local'});session=null;updateAuthUi('Your session expired. Sign in again to view student data.');setState('auth');return;}console.error(error);setState('error',`Could not load staging student data: ${error.message||'Unknown error'}`);}}
+async function loadStudents(){if(!isActiveYear())return;setState('loading');try{const {data,error}=await supabase.rpc('kc2_rebuild_students');if(error)throw error;if(!isActiveYear())return;studentRows=Array.isArray(data)?data:[];populateGradeFilter();filterStudents();renderGradeChart();renderTermChart();}catch(error){if(isUnauthorizedError(error)){await supabase.auth.signOut({scope:'local'});session=null;updateAuthUi('Your session expired. Sign in again to view student data.');setState('auth');return;}console.error(error);setState('error',`Could not load staging student data: ${error.message||'Unknown error'}`);}}
 function renderStudentRows(rows){studentBody.innerHTML='';for(const row of rows){const tr=document.createElement('tr');const pct=row.attendancePercent==null?'—':`${Number(row.attendancePercent).toFixed(1)}%`;tr.innerHTML=`<td><button class="linkbutton" data-student-id="${escapeHtml(row.student_id)}">${escapeHtml(row.student_name)}</button><small>${escapeHtml(row.student_id)}</small></td><td>${escapeHtml(row.grade)}</td><td>${escapeHtml(row.academicYear)}</td><td>${escapeHtml(row.attendanceMonthLabel)}</td><td>${pct}</td>`;tr.querySelector('button').onclick=()=>loadAttendanceDetail(row);studentBody.appendChild(tr);}}
 async function loadAttendanceDetail(student){if(!isActiveYear())return;attendanceDetail.hidden=false;document.getElementById('attendanceTitle').textContent=`${student.student_name} • ${student.attendanceMonthLabel} (provisional)`;attendanceGrid.innerHTML='<div class="muted">Loading staged attendance…</div>';if(!student.attendanceMonth){attendanceGrid.innerHTML='<div class="muted">No staged attendance exists for this student.</div>';return;}const {data,error}=await supabase.rpc('kc2_rebuild_attendance',{p_student_id:student.student_id,p_month:student.attendanceMonth});if(error){attendanceGrid.innerHTML=`<div class="errorText">Could not load attendance: ${escapeHtml(error.message)}</div>`;return;}attendanceGrid.innerHTML=(data||[]).map(day=>`<div class="daychip"><b>${day.day_of_month}</b><span>${escapeHtml(day.raw_status_code)}</span><small>${escapeHtml(day.meaning)}</small></div>`).join('')||'<div class="muted">No staged attendance days.</div>';}
 function populateGradeFilter(){
@@ -59,7 +100,7 @@ function filterStudents(){
   setState(filtered.length?'ready':'empty');
 }
 studentSearch.addEventListener('input',filterStudents);
-gradeFilter.addEventListener('change',()=>{filterStudents();renderGradeChart();});
+gradeFilter.addEventListener('change',()=>{filterStudents();renderGradeChart();renderTermChart();});
 document.getElementById('signInForm').addEventListener('submit',async event=>{event.preventDefault();authMessage.textContent='Signing in…';const form=new FormData(event.currentTarget);const{error}=await supabase.auth.signInWithPassword({email:String(form.get('email')),password:String(form.get('password'))});if(error)authMessage.textContent=error.message;});
 signOutButton.onclick=async()=>{await supabase.auth.signOut();};
 function updateAuthUi(message=''){authPanel.hidden=Boolean(session);studentContent.hidden=!session;signOutButton.hidden=!session;sessionLabel.textContent=session?.user?.email?`Signed in as ${session.user.email}`:'Not signed in';if(message)authMessage.textContent=message;renderGradeChart();}
